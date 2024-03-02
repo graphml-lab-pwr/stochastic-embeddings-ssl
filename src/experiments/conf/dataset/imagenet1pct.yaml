@@ -1,0 +1,18 @@
+name: imagenet1pct
+data_dir: data/datasets/imagenet1pct
+_target_: src.data.datamodule.imagenet.SubsetImageNetDataModule
+
+num_classes: 1000
+subset: 0.01
+val_split: 0.2
+input_height: 224
+resize_height: 256
+flatten_dim: 150528
+batch_size: 256
+shuffle: true
+num_workers: 16
+drop_last: true
+persistent_workers: true
+pin_memory: true
+task: semi_supervised
+seed: ${seed}

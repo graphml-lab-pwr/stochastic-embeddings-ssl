@@ -1,0 +1,42 @@
+name:  ssl_bayes_z
+
+defaults:
+  - _self_
+  - /callbacks: pretrain.yaml
+  - /trainer: pretrain.yaml
+
+scheduler: cosine
+sigma: full_diagonal
+mc_samples: 12
+use_mc_samples: true
+no_grad: true
+beta_scale: 0.001
+sch_eta_min_scale: 0.01
+compile_encoder: false
+
+kwargs:
+  _target_: src.task.bayesian_ssl.ZBayesianSelfSupervisedLearning
+  model_name: ${train.name}
+  batch_size: ${dataset.batch_size}
+  num_classes: ${dataset.num_classes}
+  dataset: ${dataset.name}
+  train_iters_per_epoch: null
+  cl_loss_name: ${model.loss.name}
+  cl_loss: ${model.loss}
+  prior_name: ${model.prior.name}
+  prior: ${model.prior}
+  optimizer_name: ${model.optimizer.name}
+  optimizer: ${model.optimizer}
+  learning_rate: ${model.optimizer.lr}
+  scheduler: ${train.scheduler}
+  encoder: ${model.backbone.encoder}
+  latent_dim: ${model.backbone.latent_dim}
+  hidden_dim: ${model.backbone.hidden_dim}
+  z_dim: ${model.backbone.z_dim}
+  beta_scale: ${train.beta_scale}
+  sigma: ${train.sigma}
+  mc_samples: ${train.mc_samples}
+  use_mc_samples: ${train.use_mc_samples}
+  no_grad: ${train.no_grad}
+  sch_eta_min_scale: ${train.sch_eta_min_scale}
+  compile_encoder: ${train.compile_encoder}

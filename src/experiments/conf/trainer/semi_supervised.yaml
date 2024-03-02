@@ -1,0 +1,9 @@
+max_epochs: 50
+accelerator: auto
+devices: auto
+strategy: auto
+precision: 16-mixed
+gradient_clip_val: 0.5
+deterministic: false
+sync_batchnorm: true
+check_val_every_n_epoch: 1

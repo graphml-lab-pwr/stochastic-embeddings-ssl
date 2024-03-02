@@ -1,0 +1,17 @@
+defaults:
+  - _self_
+  - dataset: imagenet1pct
+  - model/task@train: semi_supervised
+  - model/optimizer: semi_supervised
+  - logging: default
+  - debug: null
+
+seed: 1997
+checkpoint_path: null
+run_path: null
+output_path: null
+
+hydra:
+  sweep:
+    dir: ${output_path}/runs
+    subdir: ${hydra.job.num}

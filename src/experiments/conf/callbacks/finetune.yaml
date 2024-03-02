@@ -1,0 +1,10 @@
+checkpoint:
+  monitor: val_offline_acc
+  mode: max
+  save_last: true
+
+early_stopping:
+  monitor: val_offline_acc
+  mode: max
+  min_delta: 0.0
+  patience: 5

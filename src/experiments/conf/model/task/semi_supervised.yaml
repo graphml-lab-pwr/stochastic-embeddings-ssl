@@ -1,0 +1,24 @@
+# @package _global_
+defaults:
+  - _self_
+  - /callbacks: semi_supervised.yaml
+  - /trainer: semi_supervised.yaml
+
+finetune_model: simple_mlp
+use_mc_samples: true
+scheduler: cosine
+scheduler_kwargs:
+  sch_eta_min_scale: 0.1
+
+kwargs:
+  _target_: src.task.semi_supervised.SemiSupervised
+  batch_size: ${dataset.batch_size}
+  dataset: ${dataset.name}
+  num_classes: ${dataset.num_classes}
+  optimizer_name: ${model.optimizer.name}
+  optimizer: ${model.optimizer}
+  learning_rate: ${model.optimizer.lr}
+  finetune_model: ${train.finetune_model}
+  use_mc_samples: ${train.use_mc_samples}
+  scheduler: ${train.scheduler}
+  scheduler_kwargs: ${train.scheduler_kwargs}

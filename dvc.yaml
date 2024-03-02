@@ -1,0 +1,364 @@
+stages:
+  ### IMAGENET PRETRAINING ###
+  imagenet_ssl:
+    foreach:
+      - barlow_twins
+      - vicreg
+    do:
+      cmd: >-
+        PYTHONPATH=. python src/experiments/scripts/run_pipeline.py -m
+        dataset=imagenet dataset.num_workers=16 dataset.batch_size=256
+        +model/task/ssl@train=ssl
+        model/loss=${item}
+        model/optimizer=default_adamw
+        train.trainer.max_epochs=100
+        train.scheduler=cosine_warmup
+        train.sch_eta_min_scale=0.5
+        seed=1997
+        output_path=data/results/imagenet/ssl/ssl_${item}
+      deps:
+        - src/experiments/conf/dataset/imagenet.yaml
+        - src/experiments/conf/model/loss/${item}.yaml
+        - src/experiments/conf/model/task/ssl/ssl.yaml
+      outs:
+        - data/results/imagenet/ssl/ssl_${item}
+  imagenet_ssl_bayes_h_barlow:
+    foreach:
+      - 0.001
+      - 0.0001
+    do:
+      cmd: >-
+        PYTHONPATH=. python src/experiments/scripts/run_pipeline.py -m
+        dataset=imagenet dataset.num_workers=16 dataset.batch_size=256
+        +model/task/ssl@train=ssl_bayes_h
+        model/loss=mc_barlow_twins
+        model/optimizer=default_adamw
+        model/prior=standard
+        train.beta_scale=${item}
+        train.mc_samples=12
+        train.trainer.max_epochs=100
+        train.scheduler=cosine_warmup
+        train.sch_eta_min_scale=0.5
+        seed=1997
+        output_path=data/results/imagenet/ssl/ssl_bayes_h_barlow_beta_${item}
+      deps:
+        - src/experiments/conf/dataset/imagenet.yaml
+        - src/experiments/conf/model/loss/mc_barlow_twins.yaml
+        - src/experiments/conf/model/task/ssl/ssl_bayes_h.yaml
+      outs:
+        - data/results/imagenet/ssl/ssl_bayes_h_barlow_beta_${item}
+  imagenet_ssl_bayes_z_barlow:
+    cmd: >-
+      PYTHONPATH=. python src/experiments/scripts/run_pipeline.py
+      dataset=imagenet dataset.num_workers=16 dataset.batch_size=256
+      +model/task/ssl@train=ssl_bayes_z
+      model/loss=mc_barlow_twins
+      model/optimizer=default_adamw
+      model/prior=standard
+      train.beta_scale=0.01
+      train.mc_samples=12
+      train.trainer.max_epochs=100
+      train.scheduler=cosine_warmup
+      train.sch_eta_min_scale=0.5
+      seed=1997
+      output_path=data/results/imagenet/ssl/ssl_bayes_z_barlow_beta_0.01
+    deps:
+      - src/experiments/conf/dataset/imagenet.yaml
+      - src/experiments/conf/model/loss/mc_barlow_twins.yaml
+      - src/experiments/conf/model/task/ssl/ssl_bayes_z.yaml
+    outs:
+      - data/results/imagenet/ssl/ssl_bayes_z_barlow_beta_0.01
+  imagenet_ssl_bayes_h_vicreg:
+    foreach:
+      - 0.0001
+      - 0.00001
+    do:
+      cmd: >-
+        PYTHONPATH=. python src/experiments/scripts/run_pipeline.py
+        dataset=imagenet dataset.num_workers=16 dataset.batch_size=256
+        +model/task/ssl@train=ssl_bayes_h
+        model/loss=mc_vicreg
+        model/prior=standard
+        train.beta_scale=${item}
+        train.mc_samples=12
+        model/optimizer=default_adamw
+        train.trainer.max_epochs=100
+        train.scheduler=cosine_warmup
+        train.sch_eta_min_scale=0.5
+        seed=1997
+        output_path=data/results/imagenet/ssl/ssl_bayes_h_vicreg_beta_${item}
+      deps:
+        - src/experiments/conf/dataset/imagenet.yaml
+        - src/experiments/conf/model/loss/mc_vicreg.yaml
+        - src/experiments/conf/model/task/ssl/ssl_bayes_h.yaml
+      outs:
+        - data/results/imagenet/ssl/ssl_bayes_h_vicreg_beta_${item}
+  imagenet_ssl_bayes_z_vicreg:
+    cmd: >-
+      PYTHONPATH=. python src/experiments/scripts/run_pipeline.py
+      dataset=imagenet dataset.num_workers=16 dataset.batch_size=256
+      +model/task/ssl@train=ssl_bayes_z
+      model/loss=mc_vicreg
+      model/optimizer=default_adamw
+      model/prior=standard
+      train.beta_scale=0.001
+      train.mc_samples=12
+      train.trainer.max_epochs=100
+      train.compile_encoder=true
+      train.scheduler=cosine_warmup
+      train.sch_eta_min_scale=0.5
+      seed=1997
+      output_path=data/results/imagenet/ssl/ssl_bayes_z_vicreg_beta_0.001
+    deps:
+      - src/experiments/conf/dataset/imagenet.yaml
+      - src/experiments/conf/model/loss/mc_vicreg.yaml
+      - src/experiments/conf/model/task/ssl/ssl_bayes_z.yaml
+    outs:
+      - data/results/imagenet/ssl/ssl_bayes_z_vicreg_beta_0.001
+
+  #### SEMI-SUPERVISED ####
+  evaluate_semi_supervised_1pct:
+    foreach:
+      - ssl_barlow_twins
+      - ssl_vicreg
+      - ssl_bayes_h_barlow_beta_0.001
+      - ssl_bayes_h_barlow_beta_0.0001
+      - ssl_bayes_z_barlow_beta_0.01
+      - ssl_bayes_h_vicreg_beta_0.0001
+      - ssl_bayes_h_vicreg_beta_1e-05
+      - ssl_bayes_z_vicreg_beta_0.001
+    do:
+      cmd: >-
+        PYTHONPATH=. python src/experiments/scripts/run_semi_supervised.py
+        dataset=imagenet1pct
+        seed=1997
+        run_path=data/results/imagenet/ssl/${item}
+        output_path=data/results/imagenet/semi_supervised/imagenet1pct/${item}
+        logging.tracking_project_name=bayes-ssl
+        '+logging.wandb_logger_kwargs.tags=["semi_supervised", "imagenet", "1pct"]'
+      deps:
+        - src/experiments/scripts/run_semi_supervised.py
+        - src/experiments/conf/dataset/imagenet1pct.yaml
+        - src/experiments/conf/model/task/semi_supervised.yaml
+        - src/experiments/conf/model/optimizer/semi_supervised.yaml
+        - data/results/imagenet/ssl/${item}
+      outs:
+        - data/results/imagenet/semi_supervised/imagenet1pct/${item}
+  evaluate_semi_supervised_10pct:
+    foreach:
+      - ssl_barlow_twins
+      - ssl_vicreg
+      - ssl_bayes_h_barlow_beta_0.001
+      - ssl_bayes_h_barlow_beta_0.0001
+      - ssl_bayes_z_barlow_beta_0.01
+      - ssl_bayes_h_vicreg_beta_0.0001
+      - ssl_bayes_h_vicreg_beta_1e-05
+      - ssl_bayes_z_vicreg_beta_0.001
+    do:
+      cmd: >-
+        PYTHONPATH=. python src/experiments/scripts/run_semi_supervised.py
+        dataset=imagenet10pct
+        seed=1997
+        run_path=data/results/imagenet/ssl/${item}
+        output_path=data/results/imagenet/semi_supervised/imagenet10pct/${item}
+        logging.tracking_project_name=bayes-ssl
+        '+logging.wandb_logger_kwargs.tags=["semi_supervised", "imagenet", "10pct"]'
+      deps:
+        - src/experiments/scripts/run_semi_supervised.py
+        - src/experiments/conf/dataset/imagenet10pct.yaml
+        - src/experiments/conf/model/task/semi_supervised.yaml
+        - src/experiments/conf/model/optimizer/semi_supervised.yaml
+        - data/results/imagenet/ssl/${item}
+      outs:
+        - data/results/imagenet/semi_supervised/imagenet10pct/${item}
+
+  ### LINEAR EVALUATION AND TRANSFER LEARNING ###
+  pre_embed_datasets:
+    matrix:
+      model: [
+        "ssl_barlow_twins",
+        "ssl_bayes_h_barlow_beta_0.0001",
+        "ssl_bayes_h_barlow_beta_0.001",
+        "ssl_bayes_h_vicreg_beta_0.0001",
+        "ssl_bayes_h_vicreg_beta_1e-05",
+        "ssl_bayes_z_barlow_beta_0.01",
+        "ssl_bayes_z_vicreg_beta_0.001",
+        "ssl_vicreg",
+    ]
+      dataset: ["SUN397", "imagenet", "flowers-102"]
+    cmd: >-
+      PYTHONPATH=. python src/experiments/scripts/pre_embed_datasets.py
+      --experiment-dir data/results/imagenet/ssl/${item.model}
+      --config-path src/experiments/conf/linear_probing/${item.dataset}.yaml
+      --target-dir data/embeddings/${item.dataset}/${item.model}
+    deps:
+      - src/experiments/scripts/pre_embed_datasets.py
+      - src/experiments/conf/linear_probing/${item.dataset}.yaml
+      - data/results/imagenet/ssl/${item.model}
+    outs:
+      - data/embeddings/${item.dataset}/${item.model}:
+          push: false
+  evaluate_linear_probing:
+    matrix:
+      model: [
+        "ssl_barlow_twins",
+        "ssl_bayes_h_barlow_beta_0.0001",
+        "ssl_bayes_h_barlow_beta_0.001",
+        "ssl_bayes_h_vicreg_beta_0.0001",
+        "ssl_bayes_h_vicreg_beta_1e-05",
+        "ssl_bayes_z_barlow_beta_0.01",
+        "ssl_bayes_z_vicreg_beta_0.001",
+        "ssl_vicreg",
+      ]
+      dataset: ["SUN397", "imagenet", "flowers-102"]
+    cmd: >-
+      PYTHONPATH=. python src/experiments/scripts/evaluate_linear_probing.py
+      --backbone-experiment-dir data/results/imagenet/ssl/${item.model}
+      --config-path src/experiments/conf/linear_probing/${item.dataset}.yaml
+      --pre-embedded-root-dir data/embeddings/${item.dataset}/${item.model}
+      --test-mode
+    deps:
+      - src/experiments/scripts/evaluate_linear_probing.py
+      - src/experiments/conf/linear_probing/${item.dataset}.yaml
+      - data/results/imagenet/ssl/${item.model}
+      - data/embeddings/${item.dataset}/${item.model}
+    outs:
+      - data/linear_probing/${item.model}/${item.dataset}
+  summarize_linear_probing:
+    cmd: >-
+      python src/experiments/scripts/summarize_evaluation.py
+      --root-dir data/linear_probing/
+    deps:
+      - data/linear_probing
+    outs:
+      - data/reports/linear_probing_report.csv
+      - data/reports/linear_probing_report.tex
+      - data/reports/linear_probing_report.md:
+          cache: false
+
+  ### CIFAR10 ABLATION STUDIES ###
+  ablation_cifar10_barlow_twins_ssl_bayes_h:
+    matrix:
+      prior: [ standard, mog ]
+      beta_scale: [ 0.01, 0.001, 0.0001 ]
+      mc_samples: [ 1, 12 , 36 ]
+      seed: [ 1997, 1998, 1999 ]
+    cmd: >-
+      PYTHONPATH=. python src/experiments/scripts/run_pipeline.py -m
+      dataset=cifar10 dataset.num_workers=8 dataset.batch_size=256
+      +model/task/ssl@train=ssl_bayes_h
+      +model/task@finetune=finetune
+      model/loss=mc_barlow_twins
+      model/optimizer=default_adamw
+      model/prior=${item.prior}
+      train.trainer.max_epochs=200
+      train.beta_scale=${item.beta_scale}
+      train.mc_samples=${item.mc_samples}
+      seed=${item.seed}
+      output_path=data/results/ablation/cifar10/ssl_bayes_h_barlow_${item.prior}_beta_${item.beta_scale}_mc_${item.mc_samples}_seed_${item.seed}
+    deps:
+      - src/experiments/conf/dataset/cifar10.yaml
+      - src/experiments/conf/model/loss/mc_barlow_twins.yaml
+      - src/experiments/conf/model/prior
+      - src/experiments/conf/model/task/ssl/ssl_bayes_h.yaml
+      - src/experiments/conf/model/task/finetune.yaml
+    outs:
+      - data/results/ablation/cifar10/ssl_bayes_h_barlow_${item.prior}_beta_${item.beta_scale}_mc_${item.mc_samples}_seed_${item.seed}
+  ablation_cifar10_mc_barlow_twins_ssl_bayes_z:
+    matrix:
+      prior: [ standard, mog ]
+      beta_scale: [ 0.01, 0.001, 0.0001 ]
+      mc_samples: [ 1, 12 , 36 ]
+      seed: [ 1997, 1998, 1999 ]
+    cmd: >-
+      PYTHONPATH=. python src/experiments/scripts/run_pipeline.py -m
+      dataset=cifar10 dataset.num_workers=16 dataset.batch_size=256
+      +model/task/ssl@train=ssl_bayes_z
+      +model/task@finetune=finetune
+      model/loss=mc_barlow_twins
+      model/optimizer=default_adamw
+      model/prior=${item.prior}
+      train.trainer.max_epochs=200
+      train.beta_scale=${item.beta_scale}
+      train.mc_samples=${item.mc_samples}
+      seed=${item.seed}
+      output_path=data/results/ablation/cifar10/ssl_bayes_z_barlow_${item.prior}_beta_${item.beta_scale}_mc_${item.mc_samples}_seed_${item.seed}
+    deps:
+      - src/experiments/conf/dataset/cifar10.yaml
+      - src/experiments/conf/model/loss/mc_barlow_twins.yaml
+      - src/experiments/conf/model/prior
+      - src/experiments/conf/model/task/ssl/ssl_bayes_z.yaml
+      - src/experiments/conf/model/task/finetune.yaml
+    outs:
+      - data/results/ablation/cifar10/ssl_bayes_z_barlow_${item.prior}_beta_${item.beta_scale}_mc_${item.mc_samples}_seed_${item.seed}
+  ablation_cifar10_mc_vicreg_ssl_bayes_h:
+    matrix:
+      prior: [ standard, mog ]
+      beta_scale: [ 0.001, 0.0001, 0.00001 ]
+      mc_samples: [ 1, 12 ]
+      seed: [ 1997, 1998, 1999 ]
+    cmd: >-
+      PYTHONPATH=. python src/experiments/scripts/run_pipeline.py -m
+      dataset=cifar10 dataset.num_workers=16 dataset.batch_size=256
+      +model/task/ssl@train=ssl_bayes_h
+      +model/task@finetune=finetune
+      model/loss=mc_vicreg
+      model/optimizer=default_adamw
+      model/prior=${item.prior}
+      train.trainer.max_epochs=200
+      train.beta_scale=${item.beta_scale}
+      train.mc_samples=${item.mc_samples}
+      seed=${item.seed}
+      output_path=data/results/ablation/cifar10/ssl_bayes_h_vicreg_${item.prior}_beta_${item.beta_scale}_mc_${item.mc_samples}_seed_${item.seed}
+    deps:
+      - src/experiments/conf/dataset/cifar10.yaml
+      - src/experiments/conf/model/loss/mc_barlow_twins.yaml
+      - src/experiments/conf/model/prior
+      - src/experiments/conf/model/task/ssl/ssl_bayes_h.yaml
+      - src/experiments/conf/model/task/finetune.yaml
+    outs:
+      - data/results/ablation/cifar10/ssl_bayes_h_vicreg_${item.prior}_beta_${item.beta_scale}_mc_${item.mc_samples}_seed_${item.seed}
+  ablation_cifar10_mc_vicreg_ssl_bayes_z:
+    matrix:
+      prior: [ standard, mog ]
+      beta_scale: [ 0.001, 0.0001, 0.00001 ]
+      mc_samples: [ 1, 12 ]
+      seed: [ 1997, 1998, 1999 ]
+    cmd: >-
+      PYTHONPATH=. python src/experiments/scripts/run_pipeline.py -m
+      dataset=cifar10 dataset.num_workers=16 dataset.batch_size=256
+      +model/task/ssl@train=ssl_bayes_z
+      +model/task@finetune=finetune
+      model/loss=mc_vicreg
+      model/optimizer=default_adamw
+      model/prior=${item.prior}
+      train.trainer.max_epochs=200
+      train.beta_scale=${item.beta_scale}
+      train.mc_samples=${item.mc_samples}
+      seed=${item.seed}
+      output_path=data/results/ablation/cifar10/ssl_bayes_z_vicreg_${item.prior}_beta_${item.beta_scale}_mc_${item.mc_samples}_seed_${item.seed}
+    deps:
+      - src/experiments/conf/dataset/cifar10.yaml
+      - src/experiments/conf/model/loss/mc_barlow_twins.yaml
+      - src/experiments/conf/model/prior
+      - src/experiments/conf/model/task/ssl/ssl_bayes_z.yaml
+      - src/experiments/conf/model/task/finetune.yaml
+    outs:
+      - data/results/ablation/cifar10/ssl_bayes_z_vicreg_${item.prior}_beta_${item.beta_scale}_mc_${item.mc_samples}_seed_${item.seed}
+
+  ### OUT-OF-DISTRIBUTION DETECTION ###
+  ood_detection_study:
+    matrix:
+      in_dataset: [ cifar10 ]
+      detector: [  "msp", "mds", "sigmamean", "logpprior", "umds", "gram", "odin", "kldivsimk", "edsimk" ]
+    cmd: >-
+      PYTHONPATH=. python src/experiments/scripts/run_ood_study.py
+      --runs-dir data/results/ablation/${item.in_dataset}
+      --in-dataset ${item.in_dataset}
+      --data-root-dir data/datasets
+      --postprocessor-name ${item.detector}
+      --output-dir data/results/ood/${item.in_dataset}/${item.detector}
+    deps:
+      - src/experiments/scripts/run_ood_study.py
+    outs:
+      - data/results/ood/${item.in_dataset}/${item.detector}

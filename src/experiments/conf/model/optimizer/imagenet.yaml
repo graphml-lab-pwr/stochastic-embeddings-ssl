@@ -1,0 +1,6 @@
+defaults:
+  - default_lars.yaml
+  - _self_
+
+lr: 0.2
+weight_decay: 1.5e-6

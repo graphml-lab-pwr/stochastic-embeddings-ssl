@@ -1,0 +1,3 @@
+wandb: false
+csv: true
+tensorboard: false

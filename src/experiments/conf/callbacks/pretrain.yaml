@@ -1,0 +1,17 @@
+checkpoint:
+  monitor: val_online_acc
+  mode: max
+  save_last: true
+  filename: model
+
+early_stopping:
+  monitor: val_online_acc
+  mode: max
+  min_delta: 0.0
+  patience: 100
+
+learning_rate_monitor:
+  logging_interval: step
+
+online_finetuner:
+  learning_rate: 1e-4

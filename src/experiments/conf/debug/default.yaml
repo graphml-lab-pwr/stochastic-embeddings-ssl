@@ -1,0 +1,27 @@
+# @package _global_
+
+# sets level of all command line loggers to 'DEBUG'
+# https://hydra.cc/docs/tutorials/basic/running_your_app/logging/
+hydra:
+  job_logging:
+    root:
+      level: DEBUG
+
+# disable loggers during debugging
+logging:
+  wandb: false
+  csv: false
+  tensorboard: false
+  tracking_project_name: null
+  wandb_entity: null
+  wandb_logger_kwargs: null
+
+# disable callbacks during debugging and set `max_epochs` param to 1
+train:
+  callbacks: null
+  trainer:
+    max_epochs: 1
+finetune:
+  callbacks: null
+  trainer:
+    max_epochs: 1

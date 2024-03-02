@@ -1,0 +1,4 @@
+name: standard
+_target_: src.model.prior.StandardPrior
+_partial_: true
+latent_dim: ${model.backbone.latent_dim}

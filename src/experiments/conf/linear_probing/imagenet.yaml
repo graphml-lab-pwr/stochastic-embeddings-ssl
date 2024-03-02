@@ -1,0 +1,15 @@
+dataset: imagenet
+num_classes: 1_000
+task: multiclass
+dataset_dir: data/datasets/imagenet
+experiment_dir: data/linear_probing
+optim_kwargs:
+  lr: 1e-2
+  weight_decay: 5e-4
+max_epochs: 100
+scheduler_kwargs: 
+  milestones: [30, 60, 90]
+  gamma: 0.1
+batch_size: 512
+seed: 1537
+norm_repr: true

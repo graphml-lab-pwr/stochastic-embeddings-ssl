@@ -1,0 +1,16 @@
+# hyperparameters taken from https://github.com/facebookresearch/vissl/blob/main/configs/config/benchmark/linear_image_classification/sun397/eval_resnet_8gpu_transfer_sun397_linear.yaml
+dataset: SUN397
+num_classes: 397
+task: multiclass
+dataset_dir: data/datasets
+experiment_dir: data/linear_probing
+optim_kwargs:
+  lr: 1e-2
+  weight_decay: 5e-4
+max_epochs: 50
+scheduler_kwargs: 
+  milestones: [16, 32, 48]
+  gamma: 0.1
+batch_size: 256
+seed: 1537
+norm_repr: true

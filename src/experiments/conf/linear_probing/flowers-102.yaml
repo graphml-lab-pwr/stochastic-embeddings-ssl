@@ -1,0 +1,15 @@
+dataset: flowers-102
+num_classes: 102
+task: multiclass
+dataset_dir: data/datasets
+experiment_dir: data/linear_probing
+optim_kwargs:
+  lr: 1e-2
+  weight_decay: 5e-4
+max_epochs: 80
+scheduler_kwargs: 
+  milestones: [25, 50, 75]
+  gamma: 0.1
+batch_size: 128
+seed: 1537
+norm_repr: true

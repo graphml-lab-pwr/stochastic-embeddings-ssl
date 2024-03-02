@@ -1,0 +1,14 @@
+name: vicreg
+_target_: src.model.loss.vicreg.VICRegLoss
+_partial_: true
+batch_size: ${dataset.batch_size}
+z_dim: ${model.backbone.z_dim}
+variance_coeff: 25
+invariance_coeff: 25
+covariance_coeff: 1
+
+loss_kwargs:
+  loss: ${model.loss.name}
+  variance_coeff: ${model.loss.variance_coeff}
+  invariance_coeff: ${model.loss.invariance_coeff}
+  covariance_coeff: ${model.loss.covariance_coeff}

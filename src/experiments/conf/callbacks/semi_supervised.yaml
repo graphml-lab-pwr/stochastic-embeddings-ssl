@@ -1,0 +1,14 @@
+checkpoint:
+  monitor: val_accuracy
+  mode: max
+  save_last: true
+  filename: model
+
+early_stopping:
+  monitor: val_accuracy
+  mode: max
+  min_delta: 0.0
+  patience: 5
+
+learning_rate_monitor:
+  logging_interval: step

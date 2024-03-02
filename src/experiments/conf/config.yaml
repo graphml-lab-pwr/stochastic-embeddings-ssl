@@ -1,0 +1,23 @@
+defaults:
+  - _self_
+  - dataset: cifar10
+#  - model/task/ssl@train: ssl
+#  - model/task@finetune: finetune
+#  - model/task@ood: ood
+  - model/optimizer: default_adamw
+  - model/loss: mc_barlow_twins
+  - model/backbone: resnet18
+  - optional model/prior: standard
+  - logging: default
+  - hparams_search: null
+  - debug: null
+
+seed: 1997
+output_path: data/results/${dataset.name}/${train.name}/${model.loss.name}
+model_ckpt_path: null
+finetuner_ckpt_path: null
+
+hydra:
+  sweep:
+    dir: ${output_path}/runs
+    subdir: ${hydra.job.num}

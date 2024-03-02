@@ -1,0 +1,5 @@
+accelerator: auto
+devices: 1
+strategy: auto
+precision: 16-mixed
+deterministic: false

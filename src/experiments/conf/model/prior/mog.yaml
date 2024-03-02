@@ -1,0 +1,5 @@
+name: mog
+_target_: src.model.prior.MoGPrior
+_partial_: true
+latent_dim: ${model.backbone.latent_dim}
+num_components: 10

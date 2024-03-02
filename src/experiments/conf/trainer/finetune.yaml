@@ -1,0 +1,7 @@
+max_epochs: 50
+accelerator: auto
+devices: 1
+strategy: auto
+precision: 16-mixed
+gradient_clip_val: null
+deterministic: false

@@ -1,0 +1,7 @@
+name: sgd
+_target_: torch.optim.SGD
+_partial_: true
+lr: 0.06
+weight_decay: 5e-4
+momentum: 0.9
+scale_lr: true

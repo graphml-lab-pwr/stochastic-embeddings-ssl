@@ -1,0 +1,9 @@
+name: barlow_twins
+_target_: src.model.loss.barlow_twins.BarlowTwinsLoss
+_partial_: true
+lambda_coeff: 5e-3
+batch_size: ${dataset.batch_size}
+
+loss_kwargs:
+  loss: ${model.loss.name}
+  lambda_coeff: ${model.loss.lambda_coeff}

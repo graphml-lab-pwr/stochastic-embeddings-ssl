@@ -1,0 +1,24 @@
+# @package _global_
+defaults:
+  - _self_
+  - /callbacks: finetune.yaml
+  - /trainer: finetune.yaml
+
+finetune_model: simple_mlp
+use_mean_for_repr: false
+offline_learning_rate: 1e-3
+offline_weight_decay: 1e-5
+model:
+  optimizer:
+    learning_rate: ${finetune.offline_learning_rate}
+    weight_decay: ${finetune.offline_weight_decay}
+
+kwargs:
+  _target_: src.task.finetuning.LastLayerFinetuner
+  finetune_model: ${finetune.finetune_model}
+  num_classes: ${dataset.num_classes}
+  no_grad: ${train.no_grad}
+  offline_learning_rate: ${finetune.offline_learning_rate}
+  offline_weight_decay: ${finetune.offline_weight_decay}
+  use_mc_samples: ${train.use_mc_samples}
+  use_mean_for_repr: ${finetune.use_mean_for_repr}

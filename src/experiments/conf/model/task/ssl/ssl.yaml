@@ -1,0 +1,34 @@
+name: ssl
+
+defaults:
+  - _self_
+  - /callbacks: pretrain.yaml
+  - /trainer: pretrain.yaml
+
+scheduler: cosine
+no_grad: true
+sch_eta_min_scale: 0.01
+compile_encoder: false
+use_mc_samples: false
+
+kwargs:
+  _target_: src.task.ssl.SelfSupervisedLearning
+  model_name: ${train.name}
+  batch_size: ${dataset.batch_size}
+  num_classes: ${dataset.num_classes}
+  dataset: ${dataset.name}
+  train_iters_per_epoch: null
+  cl_loss_name: ${model.loss.name}
+  cl_loss: ${model.loss}
+  optimizer_name: ${model.optimizer.name}
+  optimizer: ${model.optimizer}
+  learning_rate: ${model.optimizer.lr}
+  scheduler: ${train.scheduler}
+  encoder: ${model.backbone.encoder}
+  latent_dim: ${model.backbone.latent_dim}
+  hidden_dim: ${model.backbone.hidden_dim}
+  z_dim: ${model.backbone.z_dim}
+  use_mc_samples: ${train.use_mc_samples}
+  no_grad: ${train.no_grad}
+  sch_eta_min_scale: ${train.sch_eta_min_scale}
+  compile_encoder: ${train.compile_encoder}

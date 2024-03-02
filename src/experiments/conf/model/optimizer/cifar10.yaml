@@ -1,0 +1,6 @@
+defaults:
+  - default_sgd.yaml
+  - _self_
+
+lr: 6e-2
+weight_decay: 5e-4

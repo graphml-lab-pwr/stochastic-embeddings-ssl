@@ -1,0 +1,16 @@
+name: cifar10
+data_dir: data/datasets/cifar10
+_target_: src.data.datamodule.cifar10.CIFAR10DataModule
+
+num_classes: 10
+val_split: 0.2
+input_height: 32
+flatten_dim: 3072
+batch_size: 256
+shuffle: true
+num_workers: 8
+drop_last: true
+persistent_workers: true
+pin_memory: true
+task: ${train.name}
+seed: ${seed}

@@ -1,0 +1,7 @@
+name: lars
+_target_: lightly.utils.lars.LARS
+_partial_: true
+lr: 0.06
+weight_decay: 5e-4
+momentum: 0.9
+scale_lr: true
